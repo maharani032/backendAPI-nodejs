@@ -1,36 +1,77 @@
 const {validationResult}=require('express-validator')
-exports.getPosts=(req,res,next)=>{
-    res.status(200).json({
-        posts:[{
-            _id:"1",
-            title:"first Page",
-            content:"this is first page",
-            imageURL: "images/temple.jpg",
-            creator:{
-                name:"Mahar"
-            },
-            createdAt: new Date()
+const Post=require('../Models/post')
 
-        }]})
+exports.getPosts=(req,res,next)=>{
+    Post.find()
+    .then(posts=>{
+        res.status(200).json({
+            message:"fecthed posts successfully",
+            posts:posts
+        })
+    })
+    .catch(err=>{
+        if(!err.statusCode){
+            err.statusCode=500
+        }
+        next(err)
+    })
 }
+
 exports.postPost=(req,res,next)=>{
     const errors=validationResult(req)
     if(!errors.isEmpty){
-        return res.status(422).json({
-            message:'Validation failed,',
-            errors:errors.array()
-        })
+        const error=new Error("Validation failed, entered data is incorrect.")
+        error.statusCode=422
+        throw error
     }
+     console.log("test")
+    if(!req.file){
+        const error=new Error("No image provided.")
+        error.statusCode=422
+        throw error
+    }
+   
+    console.log(req.file)
+    const imageUrl= req.file.path.replace("\\" ,"/");
     const title=req.body.title
     const content=req.body.content
-    res.status(201).json({
+    const post= new Post({
+        title:title,
+        content:content,
+        creator:{name:'mahar'},
+        imageUrl: imageUrl
+    })
+    post.save()
+    .then(result=>{
+        console.log(result)
+        res.status(201).json({
         message:"post successfully",
-        post:{
-            _id:new Date().toISOString(),
-            title:title,
-            content:content,
-            creator:{name:'mahar'},
-            createdAt:new Date()
-    }
+        post:result
+    })
+    })
+    .catch(err=>{
+        if(!err.statusCode){
+            err.statusCode=500
+        }
+        next(err)
+    })
+    
+}
+
+exports.getPost=(req,res,next)=>{
+    const postId=req.params.postId
+    Post.findById(postId).then(post=>{
+        if(!post){
+            const error=new Error("Could not find post.")
+            error.statusCode=404
+            throw error
+        }
+        res.status(200).json({message:"Post fecthed", post:post})
+    })
+    .catch(err=>{
+        if(!err.statusCode){
+            err.statusCode=500
+        }
+        next(err)
     })
 }
