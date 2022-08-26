@@ -17,8 +17,11 @@ const fileStorage=multer.diskStorage({
 })
 
 const fileFilter=(req,file,cb)=>{
-    if(file.mimetype==="image/png" ||
-    file.mimetype==="image/jpg"){
+    if(file.mimetype==="image/png"
+    || file.mimetype==="image/jpg"
+    || file.mimetype==="image/jpeg"
+
+    ){
         cb(null,true)
     }else{
         cb(null,false)
@@ -27,10 +30,10 @@ const fileFilter=(req,file,cb)=>{
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }))
-app.use("/images",express.static(path.join(__dirname,"images")))
+app.use("/images",express.static(path.join(__dirname,"image")))
 
 app.use(multer({storage:fileStorage,fileFilter:fileFilter})
-.single('image'))
+.single('imageUrl'))
 
 app.use("/feed",feedRoutes)
 app.use((error,req,res,next)=>{
